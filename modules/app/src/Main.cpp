@@ -5,11 +5,9 @@
 
 int main()
 {
-	auto callback{ [] { 
+	timer::Timer timer{ std::chrono::seconds(2), [] { 
 		std::cout << "Trigger" << std::endl;
 	} };
-
-	timer::Timer timer{ std::chrono::seconds(2), callback };
 
 	timer.Run();
 
