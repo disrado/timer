@@ -1,5 +1,7 @@
 #include "timer/Timer.hpp"	
 
+#include <iostream>
+
 namespace timer
 {
 
@@ -18,20 +20,23 @@ void Timer::Run()
 {
 	Stop();
 
-	{ auto locked{ std::unique_lock<std::mutex>(m_mutex) };
-		m_stop = false;
-	}
+	// m_stop = false;
+
+	std::lock_guard<std::mutex> lg{ m_threadMtx };
 
 	m_thread = std::thread{ [this] {
 		{ auto locked{ std::unique_lock<std::mutex>(m_mutex) };
 
-			while (!m_stop)
+			std::cout << "In while" << std::endl;
+
+			if (!m_stop)
 			{
 				auto result{ m_terminate.wait_for(locked, m_lifeTime) };
 
 				if (result == std::cv_status::timeout) {
 					m_callback();
-					return;
+					// m_stop = true;
+					std::cout << "In if" << std::endl;
 				}
 			}
 		}
@@ -40,9 +45,7 @@ void Timer::Run()
 
 void Timer::Stop()
 {
-	{ auto locked{ std::unique_lock<std::mutex>(m_mutex) };
-		m_stop = true;
-	}
+	// m_stop = true;
 
 	m_terminate.notify_one();
 

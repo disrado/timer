@@ -5,7 +5,8 @@
 
 int main()
 {
-	timer::Timer timer{ std::chrono::seconds(2), [] { 
+	while(true) {
+	timer::Timer timer{ std::chrono::seconds(3), [] { 
 		std::cout << "Trigger" << std::endl;
 	} };
 
@@ -16,19 +17,26 @@ int main()
 	
 	timer.Stop();
 
-	std::this_thread::sleep_for(std::chrono::seconds(3));
+	std::this_thread::sleep_for(std::chrono::seconds(5));
 	std::cout << "wait 3" << std::endl;
 
 	timer.Run();
 	
-	std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::this_thread::sleep_for(std::chrono::seconds(10));
 	std::cout << "wait 5" << std::endl;
 
 	timer.Run();
 
-	std::this_thread::sleep_for(std::chrono::seconds(5));
-	std::cout << "wait 5" << std::endl;
+	std::this_thread::sleep_for(std::chrono::seconds(15));
+	std::cout << "wait 6" << std::endl;
 
+	// std::this_thread::sleep_for(std::chrono::seconds(10));
+	
+	
+	std::cout << std::endl << std::endl;
+
+
+	}
 	return 0;
 }
 

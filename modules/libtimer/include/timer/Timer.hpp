@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <mutex>
@@ -28,9 +29,10 @@ private:
 	Seconds m_lifeTime;
 	Callback m_callback;
 	// Timer is stoped?
-	bool m_stop;
+	std::atomic_bool m_stop;
 	std::thread m_thread;
 	std::mutex m_mutex;
+	std::mutex m_threadMtx;
 	//! CV for terminating thread if Stop() called.
 	std::condition_variable m_terminate;
 };
