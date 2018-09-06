@@ -20,11 +20,17 @@ class Timer
 public:
 	Timer(Seconds lifetime, Callback callback);
 	~Timer();
+	Timer(const Timer&) = delete;
+	Timer& operator=(const Timer&) = delete;
+	Timer(Timer&&) = default;
+	Timer& operator=(Timer&&) = default;
 
 	//! Runs the timer. Reruns timer if called again.
 	void Start();
 	//! Stops the timer.
 	void Stop();
+	//! Returns the status of timer.
+	bool GetStatus();
 
 private:
 	//! How long timer waits before colling callback.

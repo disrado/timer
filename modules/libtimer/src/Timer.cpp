@@ -9,6 +9,7 @@ namespace timer
 Timer::Timer(Seconds lifetime, Callback callback)
 	: m_lifeTime{ lifetime }
 	, m_callback{ callback }
+	, m_stop{ true }
 {
 }
 
@@ -56,6 +57,11 @@ void Timer::Stop()
 			m_thread.join();
 		}
 	}
+}
+
+bool Timer::GetStatus()
+{
+	return static_cast<bool>(m_stop);
 }
 
 }	// namespace timer
