@@ -3,8 +3,10 @@
 #include <atomic>
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <thread>
+
 
 namespace timer
 {
@@ -20,7 +22,7 @@ public:
 	~Timer();
 
 	//! Runs the timer. Reruns timer if called again.
-	void Run();
+	void Start();
 	//! Stops the timer.
 	void Stop();
 
@@ -36,5 +38,7 @@ private:
 	//! CV for terminating thread if Stop() called.
 	std::condition_variable m_terminate;
 };
+
+using TimerShPtr = std::shared_ptr<Timer>;
 
 }	// namespace timer
