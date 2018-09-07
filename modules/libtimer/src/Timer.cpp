@@ -6,62 +6,70 @@
 namespace timer
 {
 
-Timer::Timer(Seconds lifetime, Callback callback)
-	: m_lifeTime{ lifetime }
-	, m_callback{ callback }
-	, m_stop{ true }
+Timer::Timer(Timer::Seconds delay, Timer::Callback callback)
+	: delay_{ delay }
+	, callback_{ callback }
+	, stop_{ true }
 {
 }
-
 
 Timer::~Timer()
 {
 	Stop();
 }
 
-
 void Timer::Start()
 {
 	Stop();
 
-	m_stop = false;
+	stop_ = false;
 
-	{ std::lock_guard<std::mutex> lg{ m_threadMtx };
+	std::lock_guard<std::mutex> lg{ threadMtx_ };
 
-		m_thread = std::thread{ [this] {
-			{ auto locked{ std::unique_lock<std::mutex>(m_mutex) };
+	thread_ = std::thread{ [this] {
+		auto locked{ std::unique_lock<std::mutex>(mutex_) };
 
-				while (!m_stop)
-				{
-					auto result{ m_terminate.wait_for(locked, m_lifeTime) };
+		while (!stop_)
+		{
+			auto result{ terminate_.wait_for(locked, delay_) };
 
-					if (result == std::cv_status::timeout) {
-						m_callback();
-						m_stop = true;
-					}
+			if (result == std::cv_status::timeout)
+			{
+				std::lock_guard<std::mutex> lg{ callbackMutex_ };
+
+				if (callback_) {
+					callback_();
 				}
-			}
-		} };
-	}
-}
 
+				stop_ = true;
+			}
+		}
+	} };
+}
 
 void Timer::Stop()
 {
-	m_stop = true;
+	stop_ = true;
 
-	m_terminate.notify_one();
+	terminate_.notify_one();
 
-	{ std::lock_guard<std::mutex> lg{ m_threadMtx };
-		if (m_thread.joinable()) {
-			m_thread.join();
+	{ std::lock_guard<std::mutex> lg{ threadMtx_ };
+		if (thread_.joinable()) {
+			thread_.join();
 		}
+	}
+}
+
+void Timer::SetCallback(Timer::Callback newCallback)
+{
+	{ std::lock_guard<std::mutex> lg{ callbackMutex_ };
+		callback_ = newCallback;
 	}
 }
 
 bool Timer::GetStatus()
 {
-	return static_cast<bool>(m_stop);
+	return static_cast<bool>(stop_);
 }
 
 }	// namespace timer
