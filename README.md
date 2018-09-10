@@ -7,7 +7,7 @@ Based on C++11.
 # Modules structure
 ## libtimer
 
-Contains timer ligic. Static library.
+Contains timer logic. Static library.
 
 ## app
 
