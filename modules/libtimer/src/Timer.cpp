@@ -66,7 +66,7 @@ void Timer::SetCallback(Timer::Callback newCallback)
 	}
 }
 
-bool Timer::GetStatus()
+bool Timer::IsStoped()
 {
 	return static_cast<bool>(stop_);
 }

@@ -17,15 +17,21 @@ Simple program which use library.
 
 	#include <timer/Timer.hpp>
 
-	timer::Timer timer{ std::chrono::seconds(2), [] { 
+	timer::Timer timer{ std::chrono::seconds(2), [] {
 		std::cout << "Some message" << std::endl;
 	} };
 
-	// Starts the countdown to the function call 
+	// Starts the countdown to the function call
 	timer.Run();
 	
 	// Interrupts countdown
 	timer.Stop();
+
+	// Checks status
+	if (timer.IsStoped()) {
+		// Sets the new callback
+		timer.SetCallback([] { std::cout << "Another message" << std::endl"; });
+	}
 
 	// Runs the countdown again
 	timer.Run();

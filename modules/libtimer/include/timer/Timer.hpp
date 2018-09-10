@@ -48,7 +48,7 @@ public:
 	//! Sets callback function;
 	void SetCallback(Callback newCallback);
 	//! Returns the status of timer.
-	bool GetStatus();
+	bool IsStoped();
 
 	//
 	// Private data members.
