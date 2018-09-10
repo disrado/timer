@@ -48,7 +48,7 @@ int main()
 					timer->Stop();
 				}
 
-				std::this_thread::sleep_for(std::chrono::seconds(delay * 3));
+				std::this_thread::sleep_for(std::chrono::seconds(delay + 1));
 			} };
 
 			std::thread increaseCounter{ [&delay, &inc_timers] {
@@ -66,7 +66,7 @@ int main()
 					timer->Start();
 				}
 
-				std::this_thread::sleep_for(std::chrono::seconds(delay * 3));
+				std::this_thread::sleep_for(std::chrono::seconds(delay + 1));
 
 			} };
 
@@ -75,7 +75,7 @@ int main()
 					timer->Start();
 				}
 
-				std::this_thread::sleep_for(std::chrono::seconds(delay * 3));
+				std::this_thread::sleep_for(std::chrono::seconds(delay + 1));
 			} };
 
 			doNothing.join();

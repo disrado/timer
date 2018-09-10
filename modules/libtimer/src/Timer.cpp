@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-
 namespace timer
 {
 
@@ -29,20 +28,20 @@ void Timer::Start()
 	thread_ = std::thread{ [this] {
 		auto locked{ std::unique_lock<std::mutex>(mutex_) };
 
-		while (!stop_)
+		const bool waitingResult{ terminate_.wait_for(locked, delay_, [this] { 
+			return static_cast<bool>(this->stop_);
+		}) };
+
+		// wait_for returns false only if predicate returns false after waiting.
+		// It is our case.
+		if (!waitingResult)
 		{
-			auto result{ terminate_.wait_for(locked, delay_) };
-
-			if (result == std::cv_status::timeout)
-			{
-				std::lock_guard<std::mutex> lg{ callbackMutex_ };
-
+			{ std::lock_guard<std::mutex> lg{ callbackMutex_ };
 				if (callback_) {
 					callback_();
 				}
-
-				stop_ = true;
 			}
+			stop_ = true;
 		}
 	} };
 }
