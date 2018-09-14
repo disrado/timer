@@ -7,7 +7,6 @@
 #include <mutex>
 #include <thread>
 
-
 namespace timer
 {
 
@@ -18,24 +17,24 @@ class Timer final
 	//
 public:
 	using Seconds = std::chrono::seconds;
-	using Callback = std::function<void()>;
+	using TimerExpireCallback = std::function<void()>;
 
 	//
 	// Construction and destruction.
 	//
 public:
 	//! Constructor.
-	Timer(Seconds delay, Callback callback);
+	Timer(Seconds delay, TimerExpireCallback callback = nullptr);
 	//! Destructor.
 	~Timer();
 	//! Copy constructor.
 	Timer(const Timer&) = delete;
+	//! Move constructor.
+	Timer(Timer&&) = delete;
 	//! Copy assignment operator.
 	Timer& operator=(const Timer&) = delete;
-	//! Move constructor.
-	Timer(Timer&&) = default;
 	//! Move assignment operator.
-	Timer& operator=(Timer&&) = default;
+	Timer& operator=(Timer&&) = delete;
 
 	//
 	// Public interface.
@@ -45,29 +44,27 @@ public:
 	void Start();
 	//! Stops the timer.
 	void Stop();
-	//! Sets callback function;
-	void SetCallback(Callback newCallback);
-	//! Returns the status of timer.
-	bool IsStoped();
+	//! Sets callback function.
+	void SetCallback(const TimerExpireCallback newCallback);
+	//! Returns true if timer is stopped otherwise false.
+	bool IsStopped() const;
 
 	//
 	// Private data members.
 	//
 private:
-	//! How long timer waits before colling callback.
+	//! The period of time by the end of which timer invokes callback function.
 	Seconds delay_;
-	//! Callback for calling when time expired.
-	Callback callback_;
-	// Timer is stoped?
-	std::atomic_bool stop_;
-	//! Thread for running waiting.
+	//! Callback function for cases when time is expired.
+	TimerExpireCallback callback_;
+	//! Flag which indicates whether timer has been stopped.
+	std::atomic_bool isStopped_;
+	//! Thread for timeout callback.
 	std::thread thread_;
 	//! Mutex for working with thread.
 	std::mutex mutex_;
-	//! Mutex for locking thread.
-	std::mutex threadMtx_;
-	//! Mutex for locking callback.
-	std::mutex callbackMutex_;
+	//! Mutex for locking members
+	std::mutex membersMtx_;
 	//! CV for terminating thread if Stop() called.
 	std::condition_variable terminate_;
 };

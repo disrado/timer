@@ -5,10 +5,10 @@
 namespace timer
 {
 
-Timer::Timer(Timer::Seconds delay, Timer::Callback callback)
+Timer::Timer(Timer::Seconds delay, Timer::TimerExpireCallback callback)
 	: delay_{ delay }
 	, callback_{ callback }
-	, stop_{ true }
+	, isStopped_{ true }
 {
 }
 
@@ -21,54 +21,60 @@ void Timer::Start()
 {
 	Stop();
 
-	stop_ = false;
+	isStopped_ = false;
 
-	std::lock_guard<std::mutex> lg{ threadMtx_ };
+	std::lock_guard<std::mutex> lg{ membersMtx_ };
 
 	thread_ = std::thread{ [this] {
 		auto locked{ std::unique_lock<std::mutex>(mutex_) };
 
 		const bool waitingResult{ terminate_.wait_for(locked, delay_, [this] { 
-			return static_cast<bool>(this->stop_);
+			return static_cast<bool>(this->isStopped_);
 		}) };
 
 		// wait_for returns false only if predicate returns false after waiting.
 		// It is our case.
 		if (!waitingResult)
 		{
-			{ std::lock_guard<std::mutex> lg{ callbackMutex_ };
+			{
+				std::lock_guard<std::mutex> lg{ membersMtx_ };
+
 				if (callback_) {
 					callback_();
 				}
 			}
-			stop_ = true;
+			isStopped_ = true;
 		}
 	} };
 }
 
 void Timer::Stop()
 {
-	stop_ = true;
+	isStopped_ = true;
 
 	terminate_.notify_one();
 
-	{ std::lock_guard<std::mutex> lg{ threadMtx_ };
+	{
+		std::lock_guard<std::mutex> lg{ membersMtx_ };
+		
 		if (thread_.joinable()) {
 			thread_.join();
 		}
 	}
 }
 
-void Timer::SetCallback(Timer::Callback newCallback)
+void Timer::SetCallback(Timer::TimerExpireCallback newCallback)
 {
-	{ std::lock_guard<std::mutex> lg{ callbackMutex_ };
+	{
+		std::lock_guard<std::mutex> lg{ membersMtx_ };
+		
 		callback_ = newCallback;
 	}
 }
 
-bool Timer::IsStoped()
+bool Timer::IsStopped() const
 {
-	return static_cast<bool>(stop_);
+	return static_cast<bool>(isStopped_);
 }
 
 }	// namespace timer
