@@ -1,9 +1,9 @@
-#include "timer/Timer.hpp"	
+#include "timer/Timer.hpp"
 
-#include <iostream>
 
 namespace timer
 {
+
 
 Timer::Timer(Timer::Seconds delay, Timer::TimerExpireCallback callback)
 	: delay_{ delay }
@@ -12,10 +12,12 @@ Timer::Timer(Timer::Seconds delay, Timer::TimerExpireCallback callback)
 {
 }
 
+
 Timer::~Timer()
 {
 	Stop();
 }
+
 
 void Timer::Start()
 {
@@ -28,7 +30,7 @@ void Timer::Start()
 	thread_ = std::thread{ [this] {
 		auto locked{ std::unique_lock<std::mutex>(mutex_) };
 
-		const bool waitingResult{ terminate_.wait_for(locked, delay_, [this] { 
+		const bool waitingResult{ terminate_.wait_for(locked, delay_, [this] {
 			return static_cast<bool>(this->isStopped_);
 		}) };
 
@@ -48,6 +50,7 @@ void Timer::Start()
 	} };
 }
 
+
 void Timer::Stop()
 {
 	isStopped_ = true;
@@ -63,6 +66,7 @@ void Timer::Stop()
 	}
 }
 
+
 void Timer::SetCallback(Timer::TimerExpireCallback newCallback)
 {
 	{
@@ -72,9 +76,11 @@ void Timer::SetCallback(Timer::TimerExpireCallback newCallback)
 	}
 }
 
+
 bool Timer::IsStopped() const
 {
 	return static_cast<bool>(isStopped_);
 }
+
 
 }	// namespace timer

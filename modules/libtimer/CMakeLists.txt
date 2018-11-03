@@ -11,10 +11,13 @@ add_library(${PROJECT_NAME}
 target_compile_options(${PROJECT_NAME}
 	PUBLIC
 		$<$<CXX_COMPILER_ID:MSVC>:
-			/W3 /MP4
+			/MP /W3 /Zf
 			$<$<CONFIG:Debug>:/MTd>
 			$<$<CONFIG:Release>:/MT>>
+		$<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+			-Wall -Wextra -Werror -Wpedantic -pedantic-errors -pipe -pthread>
 )
+
 target_include_directories(${PROJECT_NAME}
 	PUBLIC
 		include
