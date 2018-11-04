@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(libtimer LANGUAGES CXX)
+project(timer LANGUAGES CXX)
 
 file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES "src/*.cpp")
 

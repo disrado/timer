@@ -5,7 +5,9 @@ namespace timer
 {
 
 
-Timer::Timer(Timer::Seconds delay, Timer::TimerExpireCallback callback)
+DeadlineTimer::DeadlineTimer(
+	DeadlineTimer::Seconds delay,
+	DeadlineTimer::TimerExpireCallback callback)
 	: delay_{ delay }
 	, callback_{ callback }
 	, isStopped_{ true }
@@ -13,13 +15,13 @@ Timer::Timer(Timer::Seconds delay, Timer::TimerExpireCallback callback)
 }
 
 
-Timer::~Timer()
+DeadlineTimer::~DeadlineTimer()
 {
 	Stop();
 }
 
 
-void Timer::Start()
+void DeadlineTimer::Start()
 {
 	Stop();
 
@@ -46,6 +48,87 @@ void Timer::Start()
 				}
 			}
 			isStopped_ = true;
+		}
+	} };
+}
+
+
+void DeadlineTimer::Stop()
+{
+	isStopped_ = true;
+
+	terminate_.notify_one();
+
+	{
+		std::lock_guard<std::mutex> lg{ membersMtx_ };
+		
+		if (thread_.joinable()) {
+			thread_.join();
+		}
+	}
+}
+
+
+void DeadlineTimer::SetCallback(Timer::TimerExpireCallback newCallback)
+{
+	{
+		std::lock_guard<std::mutex> lg{ membersMtx_ };
+		
+		callback_ = newCallback;
+	}
+}
+
+
+bool DeadlineTimer::IsStopped() const
+{
+	return static_cast<bool>(isStopped_);
+}
+
+
+
+Timer::Timer(Timer::Seconds delay, Timer::TimerExpireCallback callback)
+	: delay_{ delay }
+	, callback_{ callback }
+	, isStopped_{ true }
+{
+}
+
+
+Timer::~Timer()
+{
+	Stop();
+}
+
+
+void Timer::Start()
+{
+	Stop();
+
+	isStopped_ = false;
+
+	std::lock_guard<std::mutex> lg{ membersMtx_ };
+
+	thread_ = std::thread{ [this] {
+		while(!isStopped_)
+		{
+			auto locked{ std::unique_lock<std::mutex>(mutex_) };
+
+			const bool waitingResult{ terminate_.wait_for(locked, delay_, [this] {
+				return static_cast<bool>(this->isStopped_);
+			}) };
+
+			// wait_for returns false only if predicate returns false after waiting.
+			// It is our case.
+			if (!waitingResult)
+			{
+				{
+					std::lock_guard<std::mutex> lg{ membersMtx_ };
+
+					if (callback_) {
+						callback_();
+					}
+				}
+			}
 		}
 	} };
 }
